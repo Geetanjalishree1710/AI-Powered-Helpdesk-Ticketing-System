@@ -1,0 +1,13 @@
+<%- include("partials/header") %>
+
+    <h2>Create Ticket</h2>
+
+    <form action="/tickets" method="POST">
+        <input type="text" name="title" placeholder="Title" class="form-control mb-2" required>
+
+        <textarea name="description" placeholder="Description" class="form-control mb-2" required></textarea>
+
+        <button class="btn btn-primary">Submit</button>
+    </form>
+
+    <%- include("partials/footer") %>

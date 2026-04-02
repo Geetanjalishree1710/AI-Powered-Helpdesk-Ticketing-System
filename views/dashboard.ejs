@@ -1,0 +1,51 @@
+<%- include("partials/header") %>
+
+    <h2>Dashboard</h2>
+
+    <a href="/create-ticket" class="btn btn-success mb-3">+ New Ticket</a>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>User</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% tickets.forEach(ticket => { %>
+                <tr>
+                    <td>
+                        <%= ticket.title %>
+                    </td>
+                    <td>
+                        <%= ticket.status %>
+                    </td>
+                    <td>
+                        <%= ticket.user ? ticket.user.name : "You" %>
+                    </td>
+                </tr>
+                <% }) %>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Ticket Analytics</h3>
+    <canvas id="chart"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const chart = new Chart(document.getElementById("chart"), {
+            type: "bar",
+            data: {
+                labels: ["Open", "In Progress", "Resolved"],
+                datasets: [{
+                    label: "Tickets",
+                    data: [5, 3, 2] // later make dynamic
+                }]
+            }
+        });
+    </script>
+
+    <%- include("partials/footer") %>
