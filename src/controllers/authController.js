@@ -33,22 +33,31 @@ exports.register = async(req, res) => {
 };
 
 exports.login = async(req, res) => {
-    const user = await User.findOne({ email: req.body.email });
+    try {
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).send("Server JWT configuration is missing");
+        }
 
-    if (!user) return res.send("User not found");
+        const user = await User.findOne({ email: req.body.email });
 
-    const isMatch = await bcrypt.compare(req.body.password, user.password);
-    if (!isMatch) return res.send("Wrong password");
+        if (!user) return res.send("User not found");
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
+        const isMatch = await bcrypt.compare(req.body.password, user.password);
+        if (!isMatch) return res.send("Wrong password");
 
-    res.cookie("token", token);
+        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
 
-    if (user.role === "admin") {
-        return res.redirect("/admin/panel");
+        res.cookie("token", token);
+
+        if (user.role === "admin") {
+            return res.redirect("/admin/panel");
+        }
+
+        return res.redirect("/user/panel");
+    } catch (error) {
+        console.error("LOGIN_ERROR:", error);
+        return res.status(500).send("Could not process login request");
     }
-
-    return res.redirect("/user/panel");
 };
 
 exports.logout = (req, res) => {
