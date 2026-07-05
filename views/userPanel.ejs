@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Panel | Helpdesk Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dashboard-body">
+    <% const roleLabel = user && user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"; %>
+
+        <div class="dashboard-shell">
+            <aside class="dashboard-sidebar" id="dashboardSidebar">
+                <div class="brand-wrap">
+                    <div class="brand-logo"><i class="bi bi-headset"></i></div>
+                    <div>
+                        <p class="brand-title">Helpdesk Pro</p>
+                        <p class="brand-subtitle">Ticket Intelligence</p>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <p class="nav-section">Main</p>
+                    <a href="/dashboard" class="nav-item"><i class="bi bi-grid"></i> Dashboard</a>
+                    <a href="/user/panel" class="nav-item active"><i class="bi bi-person"></i> User Panel</a>
+                    <a href="/create-ticket" class="nav-item"><i class="bi bi-plus-square"></i> Create Request</a>
+                    <a href="/logout" class="nav-item"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                </nav>
+            </aside>
+
+            <main class="dashboard-main">
+                <header class="dashboard-topbar">
+                    <div class="topbar-left">
+                        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle menu">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <div>
+                            <h1 class="page-title">User Panel</h1>
+                            <p class="page-subtitle">Track your requests and their latest status</p>
+                        </div>
+                    </div>
+
+                    <div class="topbar-right">
+                        <div class="user-pill">
+                            <i class="bi bi-person-circle"></i>
+                            <span><%= roleLabel %></span>
+                        </div>
+                        <a href="/create-ticket" class="btn btn-primary new-ticket-btn">
+                            <i class="bi bi-plus-lg"></i> New Request
+                        </a>
+                    </div>
+                </header>
+
+                <% if (message) { %>
+                    <div class="alert alert-info" role="alert">
+                        <%= message %>
+                    </div>
+                    <% } %>
+
+                        <section class="panel-card tickets-panel">
+                            <div class="panel-head table-head">
+                                <h2>My Requests</h2>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table align-middle dashboard-table" id="userTicketTable">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Status</th>
+                                            <th>Created At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (!tickets || tickets.length === 0) { %>
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">No requests yet. Create your first request.</td>
+                                            </tr>
+                                            <% } %>
+
+                                                <% (tickets || []).forEach(ticket => { %>
+                                                    <tr>
+                                                        <td>#
+                                                            <%= String(ticket._id || "").slice(-6) %>
+                                                        </td>
+                                                        <td>
+                                                            <%= ticket.title || "Untitled" %>
+                                                        </td>
+                                                        <td>
+                                                            <%= ticket.description || "-" %>
+                                                        </td>
+                                                        <td>
+                                                            <span class="pill status <%= (ticket.status || " ").toLowerCase().replace(/\s+/g, '-') %>"><%= ticket.status || "Open" %></span>
+                                                        </td>
+                                                        <td>
+                                                            <%= ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : "-" %>
+                                                        </td>
+                                                    </tr>
+                                                    <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+            </main>
+        </div>
+
+        <script>
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const sidebar = document.getElementById("dashboardSidebar");
+
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener("click", () => {
+                    sidebar.classList.toggle("sidebar-open");
+                });
+            }
+        </script>
+</body>
+
+</html>

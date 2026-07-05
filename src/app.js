@@ -1,12 +1,9 @@
 require("dotenv").config();
 const express = require("express");
-const db = require("./config/db");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-
-db();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -17,6 +14,7 @@ app.set("views", "views");
 
 app.use("/", require("./routes/authRoutes"));
 app.use("/", require("./routes/ticketRoutes"));
+app.use("/", require("./routes/userRoutes"));
 
 // pages
 app.get("/", (req, res) => res.redirect("/login"));
@@ -33,17 +31,15 @@ app.get("/dashboard", async(req, res) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Directly call the stats function instead of making HTTP request
         const Ticket = require("./models/Ticket");
-        const total = await Ticket.countDocuments();
-        const open = await Ticket.countDocuments({ status: "Open" });
-        const resolved = await Ticket.countDocuments({ status: "Resolved" });
+        const ticketFilter = decoded.role === "admin" ? {} : { createdBy: decoded.id };
+
+        const total = await Ticket.countDocuments(ticketFilter);
+        const open = await Ticket.countDocuments({...ticketFilter, status: "Open" });
+        const resolved = await Ticket.countDocuments({...ticketFilter, status: "Resolved" });
         const stats = { total, open, resolved };
 
-        // Fetch recent tickets (limit to 6 for dashboard)
-        const tickets = await Ticket.find().sort({ createdAt: -1 }).limit(6);
-
-        console.log("STATS:", stats); // 👈 DEBUG
+        const tickets = await Ticket.find(ticketFilter).sort({ createdAt: -1 }).limit(6);
 
         res.render("dashboard", {
             user: decoded,
@@ -73,11 +69,27 @@ app.get("/tickets", async(req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const Ticket = require("./models/Ticket");
-        const tickets = await Ticket.find();
+        const tickets = decoded.role === "admin" ?
+            await Ticket.find().sort({ createdAt: -1 }) :
+            await Ticket.find({ createdBy: decoded.id }).sort({ createdAt: -1 });
         res.render("tickets", { tickets: tickets, user: decoded });
     } catch (err) {
         console.log("TICKETS ERROR:", err.message);
         res.render("tickets", { tickets: [], user: {} });
+    }
+});
+
+app.get("/panel", (req, res) => {
+    try {
+        const token = req.cookies.token;
+        if (!token) {
+            return res.redirect("/login");
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        return res.redirect(decoded.role === "admin" ? "/admin/panel" : "/user/panel");
+    } catch (err) {
+        return res.redirect("/login");
     }
 });
 

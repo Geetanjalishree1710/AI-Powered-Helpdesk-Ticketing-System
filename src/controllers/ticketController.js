@@ -1,4 +1,7 @@
 const Ticket = require("../models/Ticket");
+const CONSTANTS = require("../config/constants");
+
+const ALLOWED_STATUSES = Object.values(CONSTANTS.TICKET_STATUS);
 
 exports.createTicket = async(req, res) => {
     try {
@@ -57,5 +60,55 @@ exports.resolveTicket = async(req, res) => {
     } catch (err) {
         console.error("RESOLVE_TICKET_ERROR:", err);
         res.status(500).json({ message: "Could not resolve ticket", error: err.message });
+    }
+};
+
+exports.getAdminPanelPage = async(req, res) => {
+    try {
+        const tickets = await Ticket.find()
+            .populate("createdBy", "name email")
+            .sort({ createdAt: -1 });
+
+        res.render("adminPanel", {
+            user: req.user,
+            tickets,
+            statusOptions: ALLOWED_STATUSES,
+            message: req.query.message || "",
+        });
+    } catch (err) {
+        console.error("ADMIN_PANEL_ERROR:", err);
+        res.status(500).send("Could not load admin panel");
+    }
+};
+
+exports.getUserPanelPage = async(req, res) => {
+    try {
+        const tickets = await Ticket.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
+
+        res.render("userPanel", {
+            user: req.user,
+            tickets,
+            message: req.query.message || "",
+        });
+    } catch (err) {
+        console.error("USER_PANEL_ERROR:", err);
+        res.status(500).send("Could not load user panel");
+    }
+};
+
+exports.updateTicketStatus = async(req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!ALLOWED_STATUSES.includes(status)) {
+            return res.redirect("/admin/panel?message=Invalid status selected");
+        }
+
+        await Ticket.findByIdAndUpdate(id, { status });
+        return res.redirect("/admin/panel?message=Request status updated successfully");
+    } catch (err) {
+        console.error("UPDATE_TICKET_STATUS_ERROR:", err);
+        return res.redirect("/admin/panel?message=Could not update request status");
     }
 };
