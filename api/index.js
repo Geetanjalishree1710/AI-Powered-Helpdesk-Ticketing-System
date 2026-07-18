@@ -1,13 +1,12 @@
 const app = require("../src/app");
 const connectDB = require("../src/config/db");
 
-let dbReady = false;
+let dbInitPromise = null;
 
 module.exports = async(req, res) => {
     try {
-        if (!dbReady) {
-            await connectDB();
-            dbReady = true;
+        if (!process.env.MONGO_URI) {
+            throw new Error("MONGO_URI is missing in Vercel environment variables");
         }
 
         if (!process.env.JWT_SECRET) {
