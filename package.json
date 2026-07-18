@@ -4,7 +4,7 @@
     "description": "AI-Powered Helpdesk Ticketing System - A comprehensive ticket management solution",
     "main": "index.js",
     "engines": {
-        "node": ">=16.0.0"
+        "node": "22.x"
     },
     "scripts": {
         "start": "node index.js",

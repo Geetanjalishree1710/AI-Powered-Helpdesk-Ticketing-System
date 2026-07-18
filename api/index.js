@@ -10,9 +10,24 @@ module.exports = async(req, res) => {
             dbReady = true;
         }
 
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is missing in Vercel environment variables");
+        }
+
+        if (!dbInitPromise) {
+            dbInitPromise = connectDB();
+        }
+
+        await dbInitPromise;
+
         return app(req, res);
     } catch (error) {
+        dbInitPromise = null;
         console.error("VERCEL_RUNTIME_ERROR:", error.message);
-        return res.status(500).send("Server configuration error. Please check deployment environment variables.");
+        const safeMessage = String(error && error.message ? error.message : "Unknown runtime error")
+            .replace(/mongodb\+srv:\/\/[^\s]+/gi, "[REDACTED_MONGO_URI]")
+            .slice(0, 220);
+
+        return res.status(500).send(`Server configuration error: ${safeMessage}`);
     }
 };
